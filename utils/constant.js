@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const { PORT = 3000, DB_URL = 'mongodb://127.0.0.1:27017/bitfilmsdb' } = process.env;
 
 module.exports.FORBIDDEN_DELETE_MOVIE = 'Нельзя удалять фильмы других пользователей';
