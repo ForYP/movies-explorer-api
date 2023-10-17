@@ -4,6 +4,10 @@ const User = require('../models/user');
 const BadRequestError = require('../errors/BadRequest');
 const NotFoundError = require('../errors/NotFound');
 const ConflictError = require('../errors/Conflict');
+const {
+  USER_NOT_FOUND,
+  ERROR_DUPLICATE_USER_EMAIL,
+} = require('../utils/constant');
 
 const {
   NODE_ENV = 'development',
@@ -36,7 +40,7 @@ module.exports.createUser = (req, res, next) => {
     }))
     .catch((err) => {
       if (err.code === 11000) {
-        next(new ConflictError('Пользователь уже существует'));
+        next(new ConflictError(ERROR_DUPLICATE_USER_EMAIL));
       } else if (err.name === 'ValidationError') {
         next(new BadRequestError(err.message));
       } else {
@@ -51,10 +55,12 @@ module.exports.updateUser = (req, res, next) => {
     .orFail()
     .then((user) => res.send(user))
     .catch((err) => {
-      if (err.name === 'ValidationError') {
+      if (err.code === 11000) {
+        next(new ConflictError(ERROR_DUPLICATE_USER_EMAIL));
+      } else if (err.name === 'ValidationError') {
         next(new BadRequestError(err.message));
       } else if (err.name === 'DocumentNotFoundError') {
-        next(new NotFoundError('Пользователь не найден'));
+        next(new NotFoundError(USER_NOT_FOUND));
       } else {
         next(err);
       }

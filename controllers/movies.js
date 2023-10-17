@@ -2,6 +2,12 @@ const Movie = require('../models/movie');
 const BadRequestError = require('../errors/BadRequest');
 const ForbiddenError = require('../errors/Forbidden');
 const NotFoundError = require('../errors/NotFound');
+const {
+  FORBIDDEN_DELETE_MOVIE,
+  MOVIE_DELETED,
+  MOVIE_NOT_FOUND,
+  ERROR_INCORRECT_DATA,
+} = require('../utils/constant');
 
 module.exports.getMovies = (req, res, next) => {
   const { _id } = req.user;
@@ -55,20 +61,20 @@ module.exports.createMovie = (req, res, next) => {
 };
 
 module.exports.deleteMovie = (req, res, next) => {
-  Movie.findById(req.params.movieId)
+  Movie.findById(req.params._id)
     .orFail()
     .then((movie) => {
       if (!movie.owner.equals(req.user._id)) {
-        throw new ForbiddenError('Нельзя удалять фильмы других пользователей');
+        throw new ForbiddenError(FORBIDDEN_DELETE_MOVIE);
       }
       return Movie.deleteOne(movie)
-        .then(() => res.send({ message: 'Фильм удалён' }));
+        .then(() => res.send({ message: MOVIE_DELETED }));
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        next(new BadRequestError('Переданы некорректные данные'));
+        next(new BadRequestError(ERROR_INCORRECT_DATA));
       } else if (err.name === 'DocumentNotFoundError') {
-        next(new NotFoundError('Фильм не найден'));
+        next(new NotFoundError(MOVIE_NOT_FOUND));
       } else {
         next(err);
       }
